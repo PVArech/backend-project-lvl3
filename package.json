@@ -1,0 +1,28 @@
+{
+  "name": "@hexlet/code",
+  "version": "0.0.1",
+  "description": "page-loader",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx jest --bail"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PVArech/backend-project-lvl3.git"
+  },
+  "author": "PVArech",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PVArech/backend-project-lvl3/issues"
+  },
+  "homepage": "https://github.com/PVArech/backend-project-lvl3#readme",
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.24.0"
+  }
+}
