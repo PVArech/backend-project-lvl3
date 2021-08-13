@@ -1,25 +1,25 @@
 install: # Эта команда полезна при первом клонировании репозитория (или после удаления node_modules).            
-        npm ci
+	npm ci
 
 genDiff:
-        node bin/genDiff.js
+	node bin/genDiff.js
 
 test:
-        npm test
+	npm test
 
 test-coverage:
-        npm test -- --coverage --coverageProvider=v8
+	npm test -- --coverage --coverageProvider=v8
 
 lint:
-        npx eslint .
+	npx eslint .
 
 lintFix:
-        npx eslint . --fix
+	npx eslint . --fix
 
 asci:
-        asciinema rec
+	asciinema rec
 
 publish:
-        npm publish --dry-run
+	npm publish --dry-run
 
 .PHONY: test
