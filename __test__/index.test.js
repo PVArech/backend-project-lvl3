@@ -25,7 +25,7 @@ beforeEach(async () => {
 
 nock.disableNetConnect();
 
-test('page-loader getPathFile', async () => {
+test('page-loader', async () => {
   nock(/ru\.hexlet\.io/)
     .get(/\/courses/)
     .replyWithFile(200, getFixturePath('result.html'), {

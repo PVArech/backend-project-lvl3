@@ -10,6 +10,10 @@ program
   .arguments('<url>')
   .option('-o, --output [dir]', 'output dir', currentDir)
   .action((url) => main(url, program.opts().output)
-    .then((path) => console.log(path)));
+    .then((path) => console.log(path))
+    .catch((error) => {
+      console.log(error);
+      throw error;
+    }));
 
 program.parse(process.argv);

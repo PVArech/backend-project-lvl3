@@ -18,7 +18,11 @@ const pageLoad = (url, output = process.cwd()) => {
     .then((response) => {
       fs.writeFile(filePath, response.data);
     })
-    .then(() => filePath);
+    .then(() => filePath)
+    .catch((error) => {
+      console.log(error);
+      throw error;
+    });
 };
 
 export default pageLoad;
