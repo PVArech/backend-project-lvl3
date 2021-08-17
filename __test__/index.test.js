@@ -40,6 +40,12 @@ test('page-loader only img', async () => {
       'Content-Type': 'application/json',
     });
 
+  nock(/ru\.hexlet\.io/)
+    .get(/\/assets\/professions/)
+    .replyWithFile(200, getFixturePath('image_node.png'), {
+      'Content-Type': 'application/json',
+    });
+
   const pathFile = await getPageLoad('https://ru.hexlet.io/courses', tempDir);
   expect(pathFile).toEqual(path.join(tempDir, 'ru-hexlet-io-courses.html'));
 
