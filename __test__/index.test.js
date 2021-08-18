@@ -18,15 +18,12 @@ let imgFile;
 let scriptFile;
 let styleFile;
 
-beforeAll(async () => {
+beforeEach(async () => {
+  tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
   data = await fsp.readFile(getFixturePath('hexlet_result.html'), 'utf-8');
   imgFile = await fsp.readFile(getFixturePath('image_node.png'));
   scriptFile = await fsp.readFile(getFixturePath('script.js'));
   styleFile = await fsp.readFile(getFixturePath('style.css'));
-});
-
-beforeEach(async () => {
-  tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
 });
 
 nock.disableNetConnect();
