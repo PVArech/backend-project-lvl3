@@ -1,5 +1,5 @@
 import path from 'path';
-import fs from 'fs/promises';
+import fsp from 'fs/promises';
 import { fileURLToPath } from 'url';
 import os from 'os';
 import nock from 'nock';
@@ -14,47 +14,66 @@ const getFixturePath = (filename) => path.join(__dirname, '__fixtures__', filena
 
 let tempDir;
 let data;
-let png;
+let imgFile;
+let scriptFile;
+let styleFile;
 
 beforeAll(async () => {
-  data = await fs.readFile(getFixturePath('load_hexlet.html'), 'utf-8');
-  png = await fs.readFile(getFixturePath('image_node.png'));
+  data = await fsp.readFile(getFixturePath('hexlet_result.html'), 'utf-8');
+  imgFile = await fsp.readFile(getFixturePath('image_node.png'));
+  scriptFile = await fsp.readFile(getFixturePath('script.js'));
+  styleFile = await fsp.readFile(getFixturePath('style.css'));
 });
 
 beforeEach(async () => {
-  tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+  tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
 });
 
 nock.disableNetConnect();
 
-test('page-loader only img', async () => {
-  nock(/ru\.hexlet\.io/)
-    .get(/\/courses/)
+test('page-loader all resources', async () => {
+  nock(/page-loader\.hexlet\.repl\.co/)
+    .get(/\//)
     .replyWithFile(200, getFixturePath('hexlet.html'), {
       'Content-Type': 'application/json',
-    });
-
-  nock(/ru\.hexlet\.io/)
-    .get(/\/assets\/professions/)
+    })
+    .get(/\/assets\/professions\/nodejs.png/)
     .replyWithFile(200, getFixturePath('image_node.png'), {
+      'Content-Type': 'application/json',
+    })
+    .get(/\/script.js/)
+    .replyWithFile(200, getFixturePath('script.js'), {
+      'Content-Type': 'application/json',
+    })
+    .get(/\/assets\/application\.css/)
+    .replyWithFile(200, getFixturePath('style.css'), {
+      'Content-Type': 'application/json',
+    })
+    .get(/\/courses/)
+    .replyWithFile(200, getFixturePath('courses.txt'), {
       'Content-Type': 'application/json',
     });
 
-  nock(/ru\.hexlet\.io/)
-    .get(/\/assets\/professions/)
-    .replyWithFile(200, getFixturePath('image_node.png'), {
-      'Content-Type': 'application/json',
-    });
+  const pathFile = await getPageLoad('https://page-loader.hexlet.repl.co/', tempDir);
+  await expect(pathFile).toEqual(path.join(tempDir, 'page-loader-hexlet-repl-co.html'));
 
-  const pathFile = await getPageLoad('https://ru.hexlet.io/courses', tempDir);
-  expect(pathFile).toEqual(path.join(tempDir, 'ru-hexlet-io-courses.html'));
+  const fileData = await fsp.readFile(pathFile, 'utf-8');
+  await expect(fileData).toEqual(data);
+  await expect(fileData).toMatchSnapshot();
 
-  const fileData = await fs.readFile(pathFile, 'utf-8');
-  expect(fileData).toEqual(data);
+  const imgPath = path.join(tempDir, 'page-loader-hexlet-repl-co_files', 'page-loader-hexlet-repl-co-assets-professions-nodejs.png');
+  const imgData = await fsp.readFile(imgPath);
 
-  const pngPath = path.join(tempDir, 'ru-hexlet-io-courses_files', 'ru-hexlet-io-assets-professions-nodejs.png');
-  const pngData = await fs.readFile(pngPath);
-  expect(pngData).toEqual(png);
+  const scriptPath = path.join(tempDir, 'page-loader-hexlet-repl-co_files', 'page-loader-hexlet-repl-co-script.js');
+  const scriptData = await fsp.readFile(scriptPath);
+  await expect(scriptData).toEqual(scriptFile);
 
-  expect(fileData).toMatchSnapshot();
+  const stylePath = path.join(tempDir, 'page-loader-hexlet-repl-co_files', 'page-loader-hexlet-repl-co-assets-application.css');
+  const styleData = await fsp.readFile(stylePath);
+  await expect(styleData).toEqual(styleFile);
+
+  await expect(imgData).toEqual(imgFile);
+
+  nock.cleanAll();
+  nock.enableNetConnect();
 });
