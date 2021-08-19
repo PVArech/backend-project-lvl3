@@ -10,10 +10,13 @@ program
   .arguments('<url>')
   .option('-o, --output [dir]', 'output dir', currentDir)
   .action((url) => main(url, program.opts().output)
-    .then((path) => console.log(path))
+    .then((path) => {
+      console.log(`Page was downloaded: ${path}`);
+      // process.exit(0);
+    })
     .catch((error) => {
-      console.log(error);
-      throw error;
+      console.error(error.message);
+      process.exit(1);
     }));
 
 program.parse(process.argv);

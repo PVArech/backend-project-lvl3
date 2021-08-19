@@ -3,8 +3,12 @@ import fsp from 'fs/promises';
 import { fileURLToPath } from 'url';
 import os from 'os';
 import nock from 'nock';
+import axios from 'axios';
+import httpAdapter from 'axios/lib/adapters/http.js';
 
 import main from '../index.js';
+
+axios.defaults.adapter = httpAdapter;
 
 const getPageLoad = main;
 
@@ -28,49 +32,65 @@ beforeEach(async () => {
 
 nock.disableNetConnect();
 
-test('page-loader all resources', async () => {
-  nock(/page-loader\.hexlet\.repl\.co/)
-    .get(/\//)
-    .replyWithFile(200, getFixturePath('hexlet.html'), {
-      'Content-Type': 'application/json',
-    })
-    .get(/\/assets\/professions\/nodejs.png/)
-    .replyWithFile(200, getFixturePath('image_node.png'), {
-      'Content-Type': 'application/json',
-    })
-    .get(/\/script.js/)
-    .replyWithFile(200, getFixturePath('script.js'), {
-      'Content-Type': 'application/json',
-    })
-    .get(/\/assets\/application\.css/)
-    .replyWithFile(200, getFixturePath('style.css'), {
-      'Content-Type': 'application/json',
-    })
-    .get(/\/courses/)
-    .replyWithFile(200, getFixturePath('courses.txt'), {
-      'Content-Type': 'application/json',
-    });
+describe('tests page-loader', () => {
+  it('page-loader all resources', async () => {
+    nock(/page-loader\.hexlet\.repl\.co/)
+      .get(/\//)
+      .replyWithFile(200, getFixturePath('hexlet.html'), {
+        'Content-Type': 'application/json',
+      })
+      .get(/\/assets\/professions\/nodejs.png/)
+      .replyWithFile(200, getFixturePath('image_node.png'), {
+        'Content-Type': 'application/json',
+      })
+      .get(/\/script.js/)
+      .replyWithFile(200, getFixturePath('script.js'), {
+        'Content-Type': 'application/json',
+      })
+      .get(/\/assets\/application\.css/)
+      .replyWithFile(200, getFixturePath('style.css'), {
+        'Content-Type': 'application/json',
+      })
+      .get(/\/courses/)
+      .replyWithFile(200, getFixturePath('courses.txt'), {
+        'Content-Type': 'application/json',
+      });
 
-  const pathFile = await getPageLoad('https://page-loader.hexlet.repl.co/', tempDir);
-  await expect(pathFile).toEqual(path.join(tempDir, 'page-loader-hexlet-repl-co.html'));
+    const pathFile = await getPageLoad('https://page-loader.hexlet.repl.co/', tempDir);
+    expect(pathFile).toEqual(path.join(tempDir, 'page-loader-hexlet-repl-co.html'));
 
-  const fileData = await fsp.readFile(pathFile, 'utf-8');
-  await expect(fileData).toEqual(data);
-  await expect(fileData).toMatchSnapshot();
+    const fileData = await fsp.readFile(pathFile, 'utf-8');
+    expect(fileData).toEqual(data);
+    expect(fileData).toMatchSnapshot();
 
-  const imgPath = path.join(tempDir, 'page-loader-hexlet-repl-co_files', 'page-loader-hexlet-repl-co-assets-professions-nodejs.png');
-  const imgData = await fsp.readFile(imgPath);
+    const imgPath = path.join(tempDir, 'page-loader-hexlet-repl-co_files', 'page-loader-hexlet-repl-co-assets-professions-nodejs.png');
+    const imgData = await fsp.readFile(imgPath);
 
-  const scriptPath = path.join(tempDir, 'page-loader-hexlet-repl-co_files', 'page-loader-hexlet-repl-co-script.js');
-  const scriptData = await fsp.readFile(scriptPath);
-  await expect(scriptData).toEqual(scriptFile);
+    const scriptPath = path.join(tempDir, 'page-loader-hexlet-repl-co_files', 'page-loader-hexlet-repl-co-script.js');
+    const scriptData = await fsp.readFile(scriptPath);
+    expect(scriptData).toEqual(scriptFile);
 
-  const stylePath = path.join(tempDir, 'page-loader-hexlet-repl-co_files', 'page-loader-hexlet-repl-co-assets-application.css');
-  const styleData = await fsp.readFile(stylePath);
-  await expect(styleData).toEqual(styleFile);
+    const stylePath = path.join(tempDir, 'page-loader-hexlet-repl-co_files', 'page-loader-hexlet-repl-co-assets-application.css');
+    const styleData = await fsp.readFile(stylePath);
+    expect(styleData).toEqual(styleFile);
 
-  await expect(imgData).toEqual(imgFile);
+    expect(imgData).toEqual(imgFile);
 
-  nock.cleanAll();
-  nock.enableNetConnect();
+    nock.cleanAll();
+    nock.enableNetConnect();
+  });
 });
+
+// DEBUG=axios page-loader https://page-loader.hexlet.repl.co/
+// DEBUG=axios page-loader https://optimization.guide/flying-by-instruments.html
+
+// DEBUG=page-loader:* page-loader https://page-loader.hexlet.repl.co/
+// DEBUG=page-loader:* page-loader https://optimization.guide/flying-by-instruments.html
+
+// asciinema rec
+// tree
+// page-loader -h
+// page-loader https://page-loader.hexlet.repl.co/
+// page-loader https://optimization.guide/flying-by-instruments.html
+// page-loader -o ./page-loader
+// https://optimization.guide/flying-by-instruments.html

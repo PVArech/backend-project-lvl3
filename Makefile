@@ -10,6 +10,9 @@ test:
 test-coverage:
 	npm test -- --coverage --coverageProvider=v8
 
+testDebug:
+	DEBUG=nock.* npm test
+
 lint:
 	npx eslint .
 

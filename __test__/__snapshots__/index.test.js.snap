@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`page-loader all resources 1`] = `
+exports[`tests page-loader page-loader all resources 1`] = `
 "<!DOCTYPE html><html lang=\\"ru\\"><head>
         <meta charset=\\"utf-8\\">
         <title>Курсы по программированию Хекслет</title>
