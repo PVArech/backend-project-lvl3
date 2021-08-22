@@ -44,6 +44,7 @@ const searchResources = (data, resourcesDir, urlObj) => {
         $(link).attr(mapping[tag], `${resourcePath}-${resourceObj.base}`);
         return resourceLink;
       }).toArray()));
+  console.log(links, $.html());
   return { data: $.html(), links };
 };
 
