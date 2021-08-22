@@ -32,13 +32,11 @@ const mapping = {
 };
 
 const searchResources = (data, resourcesDir, urlObj) => {
-  console.log('$$$$$$$', data, urlObj);
   const $ = cheerio.load(data);
   const links = _.flatten(Object.keys(mapping)
     .map((tag) => $(tag)
       .map((index, link) => {
         const resourceLink = $(link).attr(mapping[tag]);
-        console.log('##url##', resourceLink);
         const linkObj = new URL(resourceLink, urlObj);
         if ((linkObj.host !== urlObj.host) || !resourceLink) return null;
         const resourceObj = path.parse(resourceLink);
@@ -46,12 +44,10 @@ const searchResources = (data, resourcesDir, urlObj) => {
         $(link).attr(mapping[tag], `${resourcePath}-${resourceObj.base}`);
         return resourceLink;
       }).toArray()));
-  console.log(links, $.html());
   return { data: $.html(), links };
 };
 
 const pageLoad = (page, output = process.cwd()) => {
-  console.log('test page', page);
   const urlObj = new URL(page);
   const convertedName = makeFileName(_.trimStart(urlObj.pathname, '/'), urlObj);
   const filePath = path.join(output, `${convertedName}.html`);
@@ -60,7 +56,6 @@ const pageLoad = (page, output = process.cwd()) => {
   let pageContent;
 
   return fsp.access(output)
-    .then(() => fsp.mkdir(resourcesPath))
     .then(() => {
       log(`get basePage: ${page}`);
       return axios.get(page);
@@ -69,6 +64,7 @@ const pageLoad = (page, output = process.cwd()) => {
       pageContent = searchResources(response.data, resourcesDir, urlObj);
       return fsp.writeFile(filePath, pageContent.data);
     })
+    .then(() => fsp.mkdir(resourcesPath))
     .then(() => {
       const tasks = pageContent.links.map((link) => {
         const linkObj = path.parse(link);
@@ -83,12 +79,7 @@ const pageLoad = (page, output = process.cwd()) => {
       const listr = new Listr(tasks, { concurrent: true });
       return listr.run();
     })
-    .then(() => filePath)
-    .catch((error) => {
-      console.error('Boom! Something awful happened');
-      console.error(error.message);
-      throw error;
-    });
+    .then(() => filePath);
 };
 
 export default pageLoad;

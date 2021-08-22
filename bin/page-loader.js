@@ -12,7 +12,7 @@ program
   .action((url) => main(url, program.opts().output)
     .then((path) => {
       console.log(`Page was downloaded: ${path}`);
-      process.exit();
+      process.exit(0);
     })
     .catch((error) => {
       console.error('Boom! Something awful happened');
