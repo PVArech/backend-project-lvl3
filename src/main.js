@@ -48,6 +48,7 @@ const searchResources = (data, resourcesDir, urlObj) => {
 };
 
 const pageLoad = (page, output = process.cwd()) => {
+  console.log('########', page);
   const urlObj = new URL(page);
   const convertedName = makeFileName(_.trimStart(urlObj.pathname, '/'), urlObj);
   const filePath = path.join(output, `${convertedName}.html`);
@@ -56,7 +57,6 @@ const pageLoad = (page, output = process.cwd()) => {
   let pageContent;
 
   return fsp.access(output)
-    // .then(() => fsp.mkdir(resourcesPath, { recursive: true }))
     .then(() => fsp.mkdir(resourcesPath))
     .then(() => {
       log(`get basePage: ${page}`);
