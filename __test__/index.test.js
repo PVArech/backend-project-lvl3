@@ -17,24 +17,61 @@ const __dirname = path.dirname(__filename);
 const getFixturePath = (filename) => path.join(__dirname, '__fixtures__', filename);
 
 let tempDir;
-let data;
-let imgFile;
-let scriptFile;
-let styleFile;
+let testFilesContent;
+const basePage = 'https://page-loader.hexlet.repl.co/';
 
-beforeEach(async () => {
+const scope = nock(basePage); // .persist();
+
+const resources = [
+  {
+    name: 'hexlet_result.html',
+    format: '/html/',
+    fileName: 'page-loader-hexlet-repl-co.html',
+  },
+  {
+    name: 'image_node.png',
+    format: '/png/',
+    fileName: 'page-loader-hexlet-repl-co_files/page-loader-hexlet-repl-co-assets-professions-nodejs.png',
+  },
+  {
+    name: 'script.js',
+    format: '/js/',
+    fileName: 'page-loader-hexlet-repl-co_files/page-loader-hexlet-repl-co-script.js',
+  },
+  {
+    name: 'style.css',
+    format: '/css/',
+    fileName: 'page-loader-hexlet-repl-co_files/page-loader-hexlet-repl-co-assets-application.css',
+  },
+];
+
+beforeAll(async () => {
   tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
-  data = await fsp.readFile(getFixturePath('hexlet_result.html'), 'utf-8');
-  imgFile = await fsp.readFile(getFixturePath('image_node.png'));
-  scriptFile = await fsp.readFile(getFixturePath('script.js'));
-  styleFile = await fsp.readFile(getFixturePath('style.css'));
+
+  const testfiles = resources.map(async ({ name, format, fileName }) => {
+    const fileContent = await fsp.readFile(getFixturePath(name, 'utf8'));
+    return { format, fileContent, fileName };
+  });
+
+  testFilesContent = await Promise.all(testfiles);
+});
+
+afterAll(() => {
+  nock.cleanAll();
+  nock.enableNetConnect();
 });
 
 nock.disableNetConnect();
 
-describe('tests page-loader', () => {
-  it('page-loader all resources', async () => {
-    nock(/page-loader\.hexlet\.repl\.co/)
+describe('tests page-loader2', () => {
+  let filePath;
+
+  beforeAll(async () => {
+    filePath = path.join(tempDir, 'page-loader-hexlet-repl-co.html');
+  });
+
+  test('load base page', async () => {
+    scope
       .get(/\//)
       .replyWithFile(200, getFixturePath('hexlet.html'), {
         'Content-Type': 'application/json',
@@ -55,29 +92,35 @@ describe('tests page-loader', () => {
       .replyWithFile(200, getFixturePath('courses.txt'), {
         'Content-Type': 'application/json',
       });
+    const loadHtml = await getPageLoad(basePage, tempDir);
+    expect(loadHtml).toBe(filePath);
+  });
 
-    const pathFile = await getPageLoad('https://page-loader.hexlet.repl.co/', tempDir);
-    expect(pathFile).toEqual(path.join(tempDir, 'page-loader-hexlet-repl-co.html'));
+  test('snapshot base page', async () => {
+    const fileContent = await fsp.readFile(filePath, 'utf-8');
+    expect(fileContent).toMatchSnapshot();
+  });
 
-    const fileData = await fsp.readFile(pathFile, 'utf-8');
-    expect(fileData).toEqual(data);
-    expect(fileData).toMatchSnapshot();
+  test.each(resources)('$format, $name', async ({ format, fileName }) => {
+    const contentPath = path.join(tempDir, fileName);
+    const [{ fileContent }] = testFilesContent.filter((item) => item.format === format);
+    const content = await fsp.readFile(contentPath);
+    await expect(content).toEqual(fileContent);
+  });
+});
 
-    const imgPath = path.join(tempDir, 'page-loader-hexlet-repl-co_files', 'page-loader-hexlet-repl-co-assets-professions-nodejs.png');
-    const imgData = await fsp.readFile(imgPath);
+describe('error tests', () => {
+  test('get error 404', async () => {
+    const fakeUrl = 'https://page-loader.hexlet.repl.co/one/';
+    scope.get('/one/').reply(404);
+    const tempdir = await fsp.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+    const filesCount = await fsp.readdir(tempdir);
+    await expect(getPageLoad(fakeUrl, tempdir)).rejects.toThrow(/404/);
+    expect(filesCount).toHaveLength(0);
+  });
 
-    const scriptPath = path.join(tempDir, 'page-loader-hexlet-repl-co_files', 'page-loader-hexlet-repl-co-script.js');
-    const scriptData = await fsp.readFile(scriptPath);
-    expect(scriptData).toEqual(scriptFile);
-
-    const stylePath = path.join(tempDir, 'page-loader-hexlet-repl-co_files', 'page-loader-hexlet-repl-co-assets-application.css');
-    const styleData = await fsp.readFile(stylePath);
-    expect(styleData).toEqual(styleFile);
-
-    expect(imgData).toEqual(imgFile);
-
-    nock.cleanAll();
-    nock.enableNetConnect();
+  test('nonexistent directory for load', async () => {
+    await expect(getPageLoad(basePage, '/tmp/page-loader')).rejects.toThrow('ENOENT');
   });
 });
 
@@ -94,3 +137,5 @@ describe('tests page-loader', () => {
 // page-loader https://optimization.guide/flying-by-instruments.html
 // page-loader -o ./page-loader
 // https://optimization.guide/flying-by-instruments.html
+
+// page-loader https://page-loader.hexlet.repl.co/one

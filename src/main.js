@@ -5,7 +5,6 @@ import cheerio from 'cheerio';
 import _ from 'lodash';
 import debug from 'debug';
 import 'axios-debug-log';
-// import 'axios-debug-log/enable';
 
 const log = debug('page-loader:');
 
@@ -16,31 +15,14 @@ const makeFileName = (name, urlObj) => {
   return `${urlToFile(urlObj.hostname)}${separator}${urlToFile(name)}`;
 };
 
-const writeData = (filePath, data, urlLink) => {
-  log(`save resource: ${urlLink}`);
-  return fsp.writeFile(filePath, data)
-    .then(() => log(`resource was saved: ${filePath}`));
+const downloadData = (urlLink, resourceName) => {
+  log(`GET: ${urlLink}`);
+  return axios.get(urlLink, { responseType: 'arraybuffer' })
+    .then(({ data }) => {
+      log(`save content to file: ${resourceName}`);
+      return fsp.writeFile(resourceName, data);
+    });
 };
-
-const downloadData = (resources, resourcesPath, urlObj) => Promise.resolve()
-  .then(() => {
-    log(`creating directory resources: ${resourcesPath}`);
-    return fsp.mkdir(resourcesPath, { recursive: true });
-  })
-  .then(() => resources.links.map((link) => {
-    const linkObj = path.parse(link);
-    const resourceName = `${resourcesPath}/${makeFileName(_.trimStart(linkObj.dir, '/'), urlObj)}-${linkObj.base}`;
-    const urlLink = `${urlObj.origin}/${_.trimStart(link, '/')}`;
-    // log(`loading resources: ${urlLink}`);
-    log(`get: ${urlLink}`);
-    return axios.get(urlLink, { responseType: 'arraybuffer' })
-      .then((response) => writeData(resourceName, response.data, urlLink));
-  }))
-  .then(() => resources.data)
-  .catch((error) => {
-    console.log('!!!page-loader axios error!!!', error);
-    throw error;
-  });
 
 const mapping = {
   img: 'src',
@@ -72,18 +54,28 @@ const pageLoad = (page, output = process.cwd()) => {
   const resourcesPath = path.join(output, resourcesDir);
 
   return fsp.access(output)
+    // .then(() => fsp.mkdir(resourcesPath, { recursive: true }))
+    .then(() => fsp.mkdir(resourcesPath))
     .then(() => {
       log(`get basePage: ${page}`);
       return axios.get(page);
     })
     .then((response) => searchResources(response.data, resourcesDir, urlObj))
-    .then((response) => downloadData(response, resourcesPath, urlObj))
-    .then((response) => writeData(filePath, response, page))
-    .then(() => filePath)
-    .catch((error) => {
-      console.log('!!!page-loader error!!!', error);
-      throw error;
-    });
+    .then((response) => {
+      const tasks = response.links.map((link) => {
+        const linkObj = path.parse(link);
+        const resourceName = `${resourcesPath}/${makeFileName(_.trimStart(linkObj.dir, '/'), urlObj)}-${linkObj.base}`;
+        const urlLink = `${urlObj.origin}/${_.trimStart(link, '/')}`;
+        log(`found link: ${urlLink}`);
+        return downloadData(urlLink, resourceName);
+      });
+      return Promise.all(tasks)
+        .then(() => {
+          log(`save content to file: ${filePath}`);
+          return fsp.writeFile(filePath, response.data);
+        });
+    })
+    .then(() => filePath);
 };
 
 export default pageLoad;

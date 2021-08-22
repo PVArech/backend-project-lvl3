@@ -12,9 +12,10 @@ program
   .action((url) => main(url, program.opts().output)
     .then((path) => {
       console.log(`Page was downloaded: ${path}`);
-      // process.exit(0);
+      process.exit();
     })
     .catch((error) => {
+      console.error('Boom! Something awful happened');
       console.error(error.message);
       process.exit(1);
     }));
