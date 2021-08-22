@@ -83,7 +83,12 @@ const pageLoad = (page, output = process.cwd()) => {
       const listr = new Listr(tasks, { concurrent: true });
       return listr.run();
     })
-    .then(() => filePath);
+    .then(() => filePath)
+    .catch((error) => {
+      console.error('Boom! Something awful happened');
+      console.error(error.message);
+      throw error;
+    });
 };
 
 export default pageLoad;
