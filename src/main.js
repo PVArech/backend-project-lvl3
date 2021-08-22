@@ -32,7 +32,7 @@ const mapping = {
 };
 
 const searchResources = (data, resourcesDir, urlObj) => {
-  console.log('$$$$$$$', data);
+  console.log('$$$$$$$', data, urlObj);
   const $ = cheerio.load(data);
   const links = _.flatten(Object.keys(mapping)
     .map((tag) => $(tag)
@@ -51,7 +51,7 @@ const searchResources = (data, resourcesDir, urlObj) => {
 };
 
 const pageLoad = (page, output = process.cwd()) => {
-  console.log('########', page);
+  console.log('test page', page);
   const urlObj = new URL(page);
   const convertedName = makeFileName(_.trimStart(urlObj.pathname, '/'), urlObj);
   const filePath = path.join(output, `${convertedName}.html`);
