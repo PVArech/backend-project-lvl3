@@ -32,6 +32,7 @@ const mapping = {
 };
 
 const searchResources = (data, resourcesDir, urlObj) => {
+  console.log('$$$$$$$', data);
   const $ = cheerio.load(data);
   const links = _.flatten(Object.keys(mapping)
     .map((tag) => $(tag)
