@@ -38,6 +38,7 @@ const searchResources = (data, resourcesDir, urlObj) => {
     .map((tag) => $(tag)
       .map((index, link) => {
         const resourceLink = $(link).attr(mapping[tag]);
+        console.log('##url##', resourceLink);
         const linkObj = new URL(resourceLink, urlObj);
         if ((linkObj.host !== urlObj.host) || !resourceLink) return null;
         const resourceObj = path.parse(resourceLink);
