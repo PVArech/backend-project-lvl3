@@ -63,7 +63,7 @@ afterAll(() => {
 
 nock.disableNetConnect();
 
-describe('tests page-loader2', () => {
+describe('tests page-loader', () => {
   let filePath;
 
   beforeAll(async () => {
@@ -123,19 +123,3 @@ describe('error tests', () => {
     await expect(getPageLoad(basePage, '/tmp/page-loader')).rejects.toThrow('ENOENT');
   });
 });
-
-// DEBUG=axios page-loader https://page-loader.hexlet.repl.co/
-// DEBUG=axios page-loader https://optimization.guide/flying-by-instruments.html
-
-// DEBUG=page-loader:* page-loader https://page-loader.hexlet.repl.co/
-// DEBUG=page-loader:* page-loader https://optimization.guide/flying-by-instruments.html
-
-// asciinema rec
-// tree
-// page-loader -h
-// page-loader https://page-loader.hexlet.repl.co/
-// page-loader https://optimization.guide/flying-by-instruments.html
-// page-loader -o ./page-loader
-// https://optimization.guide/flying-by-instruments.html
-
-// page-loader https://page-loader.hexlet.repl.co/one

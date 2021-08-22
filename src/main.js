@@ -5,6 +5,7 @@ import cheerio from 'cheerio';
 import _ from 'lodash';
 import debug from 'debug';
 import 'axios-debug-log';
+import Listr from 'listr';
 
 const log = debug('page-loader:');
 
@@ -52,6 +53,7 @@ const pageLoad = (page, output = process.cwd()) => {
   const filePath = path.join(output, `${convertedName}.html`);
   const resourcesDir = `${convertedName}_files`;
   const resourcesPath = path.join(output, resourcesDir);
+  let pageContent;
 
   return fsp.access(output)
     // .then(() => fsp.mkdir(resourcesPath, { recursive: true }))
@@ -60,20 +62,23 @@ const pageLoad = (page, output = process.cwd()) => {
       log(`get basePage: ${page}`);
       return axios.get(page);
     })
-    .then((response) => searchResources(response.data, resourcesDir, urlObj))
     .then((response) => {
-      const tasks = response.links.map((link) => {
+      pageContent = searchResources(response.data, resourcesDir, urlObj);
+      return fsp.writeFile(filePath, pageContent.data);
+    })
+    .then(() => {
+      const tasks = pageContent.links.map((link) => {
         const linkObj = path.parse(link);
         const resourceName = `${resourcesPath}/${makeFileName(_.trimStart(linkObj.dir, '/'), urlObj)}-${linkObj.base}`;
         const urlLink = `${urlObj.origin}/${_.trimStart(link, '/')}`;
         log(`found link: ${urlLink}`);
-        return downloadData(urlLink, resourceName);
-      });
-      return Promise.all(tasks)
-        .then(() => {
-          log(`save content to file: ${filePath}`);
-          return fsp.writeFile(filePath, response.data);
+        return ({
+          title: urlLink,
+          task: () => downloadData(urlLink, resourceName),
         });
+      });
+      const listr = new Listr(tasks, { concurrent: true });
+      return listr.run();
     })
     .then(() => filePath);
 };

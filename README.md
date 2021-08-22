@@ -4,8 +4,4 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/60cb04f65fbf108f8b9d/maintainability)](https://codeclimate.com/github/PVArech/backend-project-lvl3/maintainability)
 
 ## asciinema
-[![asciicast](https://asciinema.org/a/mrIhovXJiTDJQ0yojGfOcXNDh.svg)](https://asciinema.org/a/mrIhovXJiTDJQ0yojGfOcXNDh)
-[![asciicast](https://asciinema.org/a/k7Fn77L1ONehGjNjZpydVb5CY.svg)](https://asciinema.org/a/k7Fn77L1ONehGjNjZpydVb5CY)
-[![asciicast](https://asciinema.org/a/oltVKM9IMfv9oLcTStcjZVSr4.svg)](https://asciinema.org/a/oltVKM9IMfv9oLcTStcjZVSr4)
-[![asciicast](https://asciinema.org/a/z1UQ92wq9KI031XydC163z9Xq.svg)](https://asciinema.org/a/z1UQ92wq9KI031XydC163z9Xq)
-[![asciicast](https://asciinema.org/a/x2l4OYe78SfYaJrUY9dxIA0MX.svg)](https://asciinema.org/a/x2l4OYe78SfYaJrUY9dxIA0MX)
+[![asciicast](https://asciinema.org/a/1qwnBiqjXldNo85zHGwkbXkm8.svg)](https://asciinema.org/a/1qwnBiqjXldNo85zHGwkbXkm8)
