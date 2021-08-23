@@ -31,8 +31,8 @@ const mapping = {
   link: 'href',
 };
 
-const searchResources = (data, resourcesDir, urlObj) => {
-  const $ = cheerio.load(data);
+const searchResources = (html, resourcesDir, urlObj) => {
+  const $ = cheerio.load(html);
   const links = _.flatten(Object.keys(mapping)
     .map((tag) => $(tag)
       .map((index, link) => {
@@ -47,8 +47,8 @@ const searchResources = (data, resourcesDir, urlObj) => {
   return { data: $.html(), links };
 };
 
-const pageLoad = (page, output = process.cwd()) => {
-  const urlObj = new URL(page);
+const pageLoad = (urlPage, output = process.cwd()) => {
+  const urlObj = new URL(urlPage);
   const convertedName = makeFileName(_.trimStart(urlObj.pathname, '/'), urlObj);
   const filePath = path.join(output, `${convertedName}.html`);
   const resourcesDir = `${convertedName}_files`;
@@ -57,8 +57,8 @@ const pageLoad = (page, output = process.cwd()) => {
 
   return fsp.access(output)
     .then(() => {
-      log(`get basePage: ${page}`);
-      return axios.get(page);
+      log(`get basePage: ${urlPage}`);
+      return axios.get(urlPage);
     })
     .then((response) => {
       pageContent = searchResources(response.data, resourcesDir, urlObj);
