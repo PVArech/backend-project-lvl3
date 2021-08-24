@@ -9,11 +9,23 @@ import Listr from 'listr';
 
 const log = debug('page-loader:');
 
-const urlToFile = (str) => str.replace(/\W/g, '-');
+const makeFileName = (urlObj, output) => {
+  const charReplace = (str, regExp, separator) => str.replace(regExp, separator);
+  const reg = /-(?=\w{2,3}$)/; // замена последнего '-' в строке
+  const regAll = /\W/g; // замена всех '-' в строке
 
-const makeFileName = (name, urlObj) => {
-  const separator = name ? '-' : '';
-  return `${urlToFile(urlObj.hostname)}${separator}${urlToFile(name)}`;
+  const linkPath = path.join(urlObj.hostname, _.trimStart(urlObj.pathname, '/'));
+  const convertedName = `${charReplace(linkPath, regAll, '-')}`;
+  const filePath = path.join(output, convertedName);
+  const { ext } = path.parse(urlObj.toString());
+  const fileWithExt = ext ? charReplace(convertedName, reg, '.') : convertedName;
+  const filePathWithExt = path.join(output, fileWithExt);
+  const resourcesDir = `${convertedName}_files`;
+  const resourcesPath = path.join(output, resourcesDir);
+
+  return {
+    filePath, filePathWithExt, resourcesDir, resourcesPath,
+  };
 };
 
 const downloadData = (urlLink, resourceName) => {
@@ -31,7 +43,7 @@ const mapping = {
   link: 'href',
 };
 
-const searchResources = (html, resourcesDir, urlObj) => {
+const getPageContent = (html, resourcesDir, urlObj) => {
   const $ = cheerio.load(html);
   const links = _.flatten(Object.keys(mapping)
     .map((tag) => $(tag)
@@ -39,20 +51,29 @@ const searchResources = (html, resourcesDir, urlObj) => {
         const resourceLink = $(link).attr(mapping[tag]);
         const linkObj = new URL(resourceLink, urlObj);
         if ((linkObj.host !== urlObj.host) || !resourceLink) return null;
-        const resourceObj = path.parse(resourceLink);
-        const resourcePath = path.join(resourcesDir, makeFileName(_.trimStart(resourceObj.dir, '/'), urlObj));
-        $(link).attr(mapping[tag], `${resourcePath}-${resourceObj.base}`);
-        return resourceLink;
+        const { filePathWithExt } = makeFileName(linkObj, resourcesDir);
+        $(link).attr(mapping[tag], filePathWithExt);
+        return linkObj;
       }).toArray()));
   return { data: $.html(), links };
 };
 
+const makeTaskDownloadData = (links, resourcesPath) => {
+  const tasks = links.map((urlLink) => {
+    const { filePathWithExt } = makeFileName(urlLink, resourcesPath);
+    log(`found link: ${urlLink.toString()}`);
+    return ({
+      title: urlLink.toString(),
+      task: () => downloadData(urlLink.toString(), filePathWithExt),
+    });
+  });
+  const listr = new Listr(tasks, { concurrent: true });
+  return listr;
+};
+
 const pageLoad = (urlPage, output = process.cwd()) => {
   const urlObj = new URL(urlPage);
-  const convertedName = makeFileName(_.trimStart(urlObj.pathname, '/'), urlObj);
-  const filePath = path.join(output, `${convertedName}.html`);
-  const resourcesDir = `${convertedName}_files`;
-  const resourcesPath = path.join(output, resourcesDir);
+  const { filePath, resourcesDir, resourcesPath } = makeFileName(urlObj, output);
   let pageContent;
 
   return fsp.access(output)
@@ -61,25 +82,19 @@ const pageLoad = (urlPage, output = process.cwd()) => {
       return axios.get(urlPage);
     })
     .then((response) => {
-      pageContent = searchResources(response.data, resourcesDir, urlObj);
-      return fsp.writeFile(filePath, pageContent.data);
+      pageContent = getPageContent(response.data, resourcesDir, urlObj);
+      return fsp.writeFile(`${filePath}.html`, pageContent.data);
     })
+    // .then(() => fsp.mkdir(resourcesPath, { recursive: true }))
     .then(() => fsp.mkdir(resourcesPath))
     .then(() => {
-      const tasks = pageContent.links.map((link) => {
-        const linkObj = path.parse(link);
-        const resourceName = `${resourcesPath}/${makeFileName(_.trimStart(linkObj.dir, '/'), urlObj)}-${linkObj.base}`;
-        const urlLink = `${urlObj.origin}/${_.trimStart(link, '/')}`;
-        log(`found link: ${urlLink}`);
-        return ({
-          title: urlLink,
-          task: () => downloadData(urlLink, resourceName),
-        });
-      });
-      const listr = new Listr(tasks, { concurrent: true });
+      const listr = makeTaskDownloadData(pageContent.links, resourcesPath);
       return listr.run();
     })
-    .then(() => filePath);
+    .then(() => `${filePath}.html`);
 };
 
 export default pageLoad;
+
+// DEBUG=page-loader:* page-loader https://page-loader.hexlet.repl.co/
+// DEBUG=axios page-loader https://page-loader.hexlet.repl.co/

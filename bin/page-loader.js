@@ -11,7 +11,7 @@ program
   .option('-o, --output [dir]', 'output dir', currentDir)
   .action((url) => main(url, program.opts().output)
     .then((path) => {
-      console.log(`Page was downloaded: ${path}`);
+      console.log(`\nPage was downloaded: ${path}\n`);
       process.exit(0);
     })
     .catch((error) => {
