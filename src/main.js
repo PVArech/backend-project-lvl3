@@ -18,7 +18,7 @@ const makeFileName = (urlObj, output) => {
   const convertedName = `${charReplace(linkPath, regAll, '-')}`;
   const filePath = path.join(output, convertedName);
   const { ext } = path.parse(urlObj.toString());
-  const fileWithExt = ext ? charReplace(convertedName, reg, '.') : convertedName;
+  const fileWithExt = ext ? charReplace(convertedName, reg, '.') : `${convertedName}.html`;
   const filePathWithExt = path.join(output, fileWithExt);
   const resourcesDir = `${convertedName}_files`;
   const resourcesPath = path.join(output, resourcesDir);
