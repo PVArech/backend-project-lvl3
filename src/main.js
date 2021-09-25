@@ -97,4 +97,5 @@ const pageLoad = (urlPage, output = process.cwd()) => {
 export default pageLoad;
 
 // DEBUG=page-loader:* page-loader https://page-loader.hexlet.repl.co/
+
 // DEBUG=axios page-loader https://page-loader.hexlet.repl.co/
